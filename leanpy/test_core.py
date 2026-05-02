@@ -6,7 +6,8 @@ LeanPy 核心测试：归约器和类型检查器。
 """
 from __future__ import annotations
 import sys
-sys.path.insert(0, '/mnt/agents/output')
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from leanpy.name import Name, mk_name
 from leanpy.level import Level
