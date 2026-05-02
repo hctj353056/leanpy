@@ -14,11 +14,9 @@ Lean 全局环境和局部上下文模块。
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple, Union
-from copy import deepcopy
+from typing import Dict, List, Optional, Tuple, Union
 
-from .name import Name, mk_name
-from .level import Level
+from .name import Name
 from .expr import Expr, BinderInfo
 
 
@@ -174,14 +172,20 @@ ConstantInfo = Union[AxiomVal, DefnVal, ThmVal, OpaqueVal, InductVal, CtorVal, R
 def constant_info_name(info: ConstantInfo) -> Name:
     """获取 ConstantInfo 的名称（辅助函数）"""
     match info:
-        case AxiomVal(name=n) | DefnVal(name=n) | ThmVal(name=n) | OpaqueVal(name=n) | InductVal(name=n) | CtorVal(name=n) | RecVal(name=n):
+        case (
+            AxiomVal(name=n) | DefnVal(name=n) | ThmVal(name=n) |
+            OpaqueVal(name=n) | InductVal(name=n) | CtorVal(name=n) | RecVal(name=n)
+        ):
             return n
 
 
 def constant_info_type(info: ConstantInfo) -> Expr:
     """获取 ConstantInfo 的类型（辅助函数）"""
     match info:
-        case AxiomVal(type=t) | DefnVal(type=t) | ThmVal(type=t) | OpaqueVal(type=t) | InductVal(type=t) | CtorVal(type=t) | RecVal(type=t):
+        case (
+            AxiomVal(type=t) | DefnVal(type=t) | ThmVal(type=t) |
+            OpaqueVal(type=t) | InductVal(type=t) | CtorVal(type=t) | RecVal(type=t)
+        ):
             return t
 
 
@@ -315,7 +319,9 @@ class LocalDecl:
     @staticmethod
     def ldecl(fvar_id: int, user_name: str, type: Expr, value: Expr) -> LocalDecl:
         """创建 let 绑定声明（ldecl）：x : A := v"""
-        return LocalDecl(LocalDecl.LDecl(), fvar_id, user_name, type, value, BinderInfo.DEFAULT)
+        return LocalDecl(
+            LocalDecl.LDecl(), fvar_id, user_name, type, value, BinderInfo.DEFAULT
+        )
 
     def is_let(self) -> bool:
         """是否是 let 绑定"""
@@ -361,8 +367,10 @@ class LocalContext:
         new_decls.append(decl)
         return LocalContext(new_decls, max(self._next_fvar_id, decl.fvar_id + 1))
 
-    def extend_cdecl(self, user_name: str, type: Expr,
-                      binder_info: BinderInfo = BinderInfo.DEFAULT) -> Tuple[LocalContext, Expr]:
+    def extend_cdecl(
+        self, user_name: str, type: Expr,
+        binder_info: BinderInfo = BinderInfo.DEFAULT
+    ) -> Tuple[LocalContext, Expr]:
         """
         创建 cdecl 并扩展上下文。
 
@@ -374,7 +382,9 @@ class LocalContext:
         new_ctx = self.extend(decl)
         return new_ctx, Expr.fvar(fvar_id)
 
-    def extend_ldecl(self, user_name: str, type: Expr, value: Expr) -> Tuple[LocalContext, Expr]:
+    def extend_ldecl(
+        self, user_name: str, type: Expr, value: Expr
+    ) -> Tuple[LocalContext, Expr]:
         """
         创建 ldecl 并扩展上下文。
 
@@ -385,8 +395,10 @@ class LocalContext:
         new_ctx = self.extend(decl)
         return new_ctx, Expr.fvar(fvar_id)
 
-    def mk_fvar(self, user_name: str, type: Expr,
-                binder_info: BinderInfo = BinderInfo.DEFAULT) -> Tuple[LocalContext, Expr]:
+    def mk_fvar(
+        self, user_name: str, type: Expr,
+        binder_info: BinderInfo = BinderInfo.DEFAULT
+    ) -> Tuple[LocalContext, Expr]:
         """
         创建新的自由变量并加入上下文（别名）。
 
@@ -519,14 +531,18 @@ class MetavarContext:
         new_ctx = MetavarContext(new_decls, dict(self.assignments), mvar_id + 1)
         return new_ctx, Expr.mvar(mvar_id)
 
-    def add_decl(self, mvar_id: int, local_ctx: LocalContext, type: Expr,
-                 user_name: Optional[str] = None) -> MetavarContext:
+    def add_decl(
+        self, mvar_id: int, local_ctx: LocalContext, type: Expr,
+        user_name: Optional[str] = None
+    ) -> MetavarContext:
         """通过指定 ID 添加元变量声明"""
         decl = MetavarDecl(mvar_id, local_ctx, type, user_name)
         new_decls = dict(self.decls)
         new_decls[mvar_id] = decl
-        return MetavarContext(new_decls, dict(self.assignments),
-                             max(self._next_mvar_id, mvar_id + 1))
+        return MetavarContext(
+            new_decls, dict(self.assignments),
+            max(self._next_mvar_id, mvar_id + 1)
+        )
 
     def assign(self, mvar_id: int, value: Expr) -> MetavarContext:
         """
@@ -593,7 +609,7 @@ class MetavarContext:
                 case Expr.LetE(name, dtype, value, body):
                     return Expr.letE(name, go(dtype), go(value), go(body))
                 case Expr.Proj(tname, idx, struct):
-                    return Expr.proj(tname, idx, go(struct))
+                    return Expr.Proj(tname, idx, go(struct))
                 case _:
                     # BVar, FVar, Sort, Const, Lit 不含子表达式中的元变量
                     return e

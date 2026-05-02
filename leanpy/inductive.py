@@ -478,18 +478,18 @@ def mk_env_with_all_builtins() -> Environment:
 
 def mk_prod_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
     """创建积类型 Prod A B（即 A × B，对应逻辑合取 A ∧ B）。
-    
+
     inductive Prod (A : Type u) (B : Type v) : Type (max u v) where
       | mk : A → B → Prod A B
     """
     u_level = Level.param("u")
     v_level = Level.param("v")
     uv_level = Level.max_level(u_level, v_level)
-    
+
     prod_name = mk_name("Prod")
     A_name = mk_name("A")
     B_name = mk_name("B")
-    
+
     # A : Type u
     A_type = Expr.sort(u_level)
     # B : Type v
@@ -497,12 +497,12 @@ def mk_prod_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
     # Prod A B : Type (max u v)
     prod_AB = Expr.mk_app(Expr.const(prod_name, [u_level, v_level]),
                           [Expr.const(A_name), Expr.const(B_name)])
-    
+
     # Prod 的类型: Π (A : Type u) (B : Type v), Type (max u v)
     prod_type = Expr.forallE("A", A_type,
         Expr.forallE("B", B_type,
             Expr.sort(uv_level)))
-    
+
     # mk : Π (A : Type u) (B : Type v), A → B → Prod A B
     A_const = Expr.const(A_name)
     B_const = Expr.const(B_name)
@@ -513,18 +513,18 @@ def mk_prod_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
                     Expr.mk_app(
                         Expr.const(prod_name, [u_level, v_level]),
                         [A_const, B_const])))))
-    
+
     ctor = Constructor(name=mk_name("Prod", "mk"), type=mk_type)
-    
+
     prod_ind = InductiveDecl(
         name=prod_name, level_params=["u", "v"],
         num_params=2, num_indices=0,
         type=prod_type, constructors=[ctor],
         is_recursor=False,
     )
-    
+
     prod_rec = generate_recursor(prod_ind)
-    
+
     constants: List[ConstantInfo] = [
         InductVal(name=prod_name, type=prod_type, num_params=2, num_indices=0,
                   all_ctor_names=[mk_name("Prod", "mk")], is_rec=False),
@@ -532,7 +532,7 @@ def mk_prod_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
                 induct_name=prod_name, cidx=1, num_params=2, num_fields=2),
         prod_rec.to_rec_val(prod_name),
     ]
-    
+
     return prod_ind, constants
 
 
@@ -542,7 +542,7 @@ def mk_prod_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
 
 def mk_sum_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
     """创建和类型 Sum A B（即 A ⊕ B，对应逻辑析取 A ∨ B）。
-    
+
     inductive Sum (A : Type u) (B : Type v) : Type (max u v) where
       | inl : A → Sum A B
       | inr : B → Sum A B
@@ -550,26 +550,26 @@ def mk_sum_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
     u_level = Level.param("u")
     v_level = Level.param("v")
     uv_level = Level.max_level(u_level, v_level)
-    
+
     sum_name = mk_name("Sum")
     A_name = mk_name("A")
     B_name = mk_name("B")
-    
+
     A_type = Expr.sort(u_level)
     B_type = Expr.sort(v_level)
-    
+
     # Sum A B : Type (max u v)
     sum_AB = Expr.mk_app(Expr.const(sum_name, [u_level, v_level]),
                          [Expr.const(A_name), Expr.const(B_name)])
-    
+
     # Sum 的类型: Π (A : Type u) (B : Type v), Type (max u v)
     sum_type = Expr.forallE("A", A_type,
         Expr.forallE("B", B_type,
             Expr.sort(uv_level)))
-    
+
     A_const = Expr.const(A_name)
     B_const = Expr.const(B_name)
-    
+
     # inl : Π (A : Type u) (B : Type v), A → Sum A B
     inl_type = Expr.forallE("A", A_type,
         Expr.forallE("B", B_type,
@@ -577,7 +577,7 @@ def mk_sum_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
                 Expr.mk_app(
                     Expr.const(sum_name, [u_level, v_level]),
                     [A_const, B_const]))))
-    
+
     # inr : Π (A : Type u) (B : Type v), B → Sum A B
     inr_type = Expr.forallE("A", A_type,
         Expr.forallE("B", B_type,
@@ -585,19 +585,19 @@ def mk_sum_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
                 Expr.mk_app(
                     Expr.const(sum_name, [u_level, v_level]),
                     [A_const, B_const]))))
-    
+
     inl_ctor = Constructor(name=mk_name("Sum", "inl"), type=inl_type)
     inr_ctor = Constructor(name=mk_name("Sum", "inr"), type=inr_type)
-    
+
     sum_ind = InductiveDecl(
         name=sum_name, level_params=["u", "v"],
         num_params=2, num_indices=0,
         type=sum_type, constructors=[inl_ctor, inr_ctor],
         is_recursor=False,
     )
-    
+
     sum_rec = generate_recursor(sum_ind)
-    
+
     constants: List[ConstantInfo] = [
         InductVal(name=sum_name, type=sum_type, num_params=2, num_indices=0,
                   all_ctor_names=[mk_name("Sum", "inl"), mk_name("Sum", "inr")], is_rec=False),
@@ -607,5 +607,5 @@ def mk_sum_type() -> Tuple[InductiveDecl, List[ConstantInfo]]:
                 induct_name=sum_name, cidx=2, num_params=2, num_fields=1),
         sum_rec.to_rec_val(sum_name),
     ]
-    
+
     return sum_ind, constants

@@ -16,6 +16,8 @@ from .expr import (
 )
 
 # 这些在运行时导入以避免循环依赖
+
+
 def _load_full():
     from . import environment
     from . import inductive
@@ -24,6 +26,7 @@ def _load_full():
     from . import parser
     from . import tactic
     return environment, inductive, reducer, typechecker, parser, tactic
+
 
 __all__ = [
     'Name', 'mk_name',

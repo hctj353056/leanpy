@@ -18,7 +18,7 @@ from .level import Level
 class BinderInfo(Enum):
     """
     绑定器信息，描述 λ/Π 绑定变量的行为。
-    
+
     - DEFAULT: 普通绑定（显式参数）
     - IMPLICIT: 隐式参数 {x : A}
     - STRICT_IMPLICT: 严格隐式参数 ⦃x : A⦄
@@ -32,11 +32,11 @@ class BinderInfo(Enum):
 
 class Literal:
     """字面量：自然数或字符串"""
-    
+
     @dataclass(frozen=True)
     class NatVal:
         val: int
-    
+
     @dataclass(frozen=True)
     class StrVal:
         val: str
@@ -46,10 +46,10 @@ class Literal:
 class Expr:
     """
     Lean 核心表达式。
-    
+
     这是 Curry-Howard 同构的载体：命题即类型，证明即程序。
     所有表达式统一使用此类型表示。
-    
+
     Expr 的语法（核心层）：
       e ::= bvar idx                 -- 绑定变量（de Bruijn 索引）
           | fvar id                  -- 自由变量（局部常量引用）
@@ -61,35 +61,35 @@ class Expr:
           | forallE name type body bi -- Π 类型（依赖函数类型）
           | letE name type value body -- let 绑定
           | lit literal              -- 字面量
-    
+
     de Bruijn 索引规则：
     - λ x : A. body 中，x 在 body 中被表示为 bvar 0
     - body 中原来引用外层第 n 个绑定的变量变为 bvar (n+1)
     - 例如：λ x. λ y. x 表示为 lam(A, lam(B, bvar 1))
     """
-    
+
     # ===== 构造函数 =====
-    
+
     @dataclass(frozen=True)
     class BVar:
         """绑定变量：de Bruijn 索引"""
         idx: int  # 0 = 最近绑定，1 = 外层第1个，...
-    
+
     @dataclass(frozen=True)
     class FVar:
         """自由变量：局部常量引用（唯一 ID）"""
         id: int   # 唯一标识符
-    
+
     @dataclass(frozen=True)
     class MVar:
         """元变量：待填充的"洞"（metavariable）"""
         id: int   # 唯一标识符
-    
+
     @dataclass(frozen=True)
     class Sort:
         """宇宙层级：Sort u"""
         level: Level
-        
+
         def __repr__(self):
             if self.level == Level.PROP:
                 return "Prop"
@@ -97,19 +97,19 @@ class Expr:
                 return "Type"
             else:
                 return f"Sort {self.level}"
-    
+
     @dataclass(frozen=True)
     class Const:
         """全局常量引用"""
         name: Name
         levels: List[Level]  # universe 实例化参数
-    
+
     @dataclass(frozen=True)
     class App:
         """函数应用：fn arg"""
         fn: 'Expr'
         arg: 'Expr'
-    
+
     @dataclass(frozen=True)
     class Lam:
         """λ 抽象：λ (name : type). body"""
@@ -117,7 +117,7 @@ class Expr:
         dtype: 'Expr'       # 绑定变量类型
         body: 'Expr'       # 函数体（内部使用 de Bruijn 索引）
         binder_info: BinderInfo = BinderInfo.DEFAULT
-    
+
     @dataclass(frozen=True)
     class ForallE:
         """Π 类型 / 依赖函数类型：Π (name : type). body"""
@@ -125,7 +125,7 @@ class Expr:
         dtype: 'Expr'       # 绑定变量类型
         body: 'Expr'        # 结果类型（可依赖 name）
         binder_info: BinderInfo = BinderInfo.DEFAULT
-    
+
     @dataclass(frozen=True)
     class LetE:
         """let 绑定：let name : type := value in body"""
@@ -133,85 +133,85 @@ class Expr:
         dtype: 'Expr'       # 变量类型
         value: 'Expr'       # 绑定值
         body: 'Expr'        # 作用域体
-    
+
     @dataclass(frozen=True)
     class Lit:
         """字面量"""
         literal: Union[Literal.NatVal, Literal.StrVal]
-    
+
     @dataclass(frozen=True)
     class Proj:
         """投影：结构体字段访问"""
         type_name: Name
         field_idx: int
         struct: 'Expr'
-    
+
     # ===== 构造函数结束 =====
-    
+
     kind: Union[BVar, FVar, MVar, Sort, Const, App, Lam, ForallE, LetE, Lit, Proj]
-    
+
     def __init__(self, kind):
         object.__setattr__(self, 'kind', kind)
-    
+
     # ===== 便捷构造方法 =====
-    
+
     @staticmethod
     def bvar(idx: int) -> Expr:
         """创建绑定变量"""
         return Expr(Expr.BVar(idx))
-    
+
     @staticmethod
     def fvar(id: int) -> Expr:
         """创建自由变量"""
         return Expr(Expr.FVar(id))
-    
+
     @staticmethod
     def mvar(id: int) -> Expr:
         """创建元变量"""
         return Expr(Expr.MVar(id))
-    
+
     @staticmethod
     def sort(level: Level) -> Expr:
         """创建宇宙层级表达式"""
         return Expr(Expr.Sort(level))
-    
+
     @staticmethod
     def const(name: Name, levels: List[Level] = None) -> Expr:
         """创建全局常量引用"""
         return Expr(Expr.Const(name, levels or []))
-    
+
     @staticmethod
     def app(fn: Expr, arg: Expr) -> Expr:
         """创建函数应用"""
         return Expr(Expr.App(fn, arg))
-    
+
     @staticmethod
     def lam(name: str, dtype: Expr, body: Expr, binder_info: BinderInfo = BinderInfo.DEFAULT) -> Expr:
         """创建 λ 抽象"""
         return Expr(Expr.Lam(name, dtype, body, binder_info))
-    
+
     @staticmethod
     def forallE(name: str, dtype: Expr, body: Expr, binder_info: BinderInfo = BinderInfo.DEFAULT) -> Expr:
         """创建 Π 类型"""
         return Expr(Expr.ForallE(name, dtype, body, binder_info))
-    
+
     @staticmethod
     def letE(name: str, dtype: Expr, value: Expr, body: Expr) -> Expr:
         """创建 let 绑定"""
         return Expr(Expr.LetE(name, dtype, value, body))
-    
+
     @staticmethod
     def lit_nat(n: int) -> Expr:
         """创建自然数字面量"""
         return Expr(Expr.Lit(Literal.NatVal(n)))
-    
+
     @staticmethod
     def lit_str(s: str) -> Expr:
         """创建字符串字面量"""
         return Expr(Expr.Lit(Literal.StrVal(s)))
-    
+
     # ===== 多参数应用 =====
-    
+
     @staticmethod
     def mk_app(fn: Expr, args: List[Expr]) -> Expr:
         """创建多参数应用：(((fn arg1) arg2) ... argN)"""
@@ -219,7 +219,7 @@ class Expr:
         for arg in args:
             result = Expr.app(result, arg)
         return result
-    
+
     @staticmethod
     def mk_lam(names_dtypes: List[Tuple[str, Expr]], body: Expr) -> Expr:
         """创建多参数 λ：λ x1 : A1. λ x2 : A2. ... body"""
@@ -227,7 +227,7 @@ class Expr:
         for name, dtype in reversed(names_dtypes):
             result = Expr.lam(name, dtype, result)
         return result
-    
+
     @staticmethod
     def mk_forallE(names_dtypes: List[Tuple[str, Expr]], body: Expr) -> Expr:
         """创建多参数 Π：Π x1 : A1. Π x2 : A2. ... body"""
@@ -235,52 +235,52 @@ class Expr:
         for name, dtype in reversed(names_dtypes):
             result = Expr.forallE(name, dtype, result)
         return result
-    
+
     @staticmethod
     def mk_arrow(src: Expr, dst: Expr) -> Expr:
         """创建非依赖函数类型：src → dst（即 Π _:src. dst）"""
         return Expr.forallE("_", src, dst)
-    
+
     # ===== 属性方法 =====
-    
+
     def is_bvar(self) -> bool:
         return isinstance(self.kind, Expr.BVar)
-    
+
     def is_fvar(self) -> bool:
         return isinstance(self.kind, Expr.FVar)
-    
+
     def is_mvar(self) -> bool:
         return isinstance(self.kind, Expr.MVar)
-    
+
     def is_sort(self) -> bool:
         return isinstance(self.kind, Expr.Sort)
-    
+
     def is_const(self) -> bool:
         return isinstance(self.kind, Expr.Const)
-    
+
     def is_app(self) -> bool:
         return isinstance(self.kind, Expr.App)
-    
+
     def is_lam(self) -> bool:
         return isinstance(self.kind, Expr.Lam)
-    
+
     def is_forallE(self) -> bool:
         return isinstance(self.kind, Expr.ForallE)
-    
+
     def is_letE(self) -> bool:
         return isinstance(self.kind, Expr.LetE)
-    
+
     def is_arrow(self) -> bool:
         """检查是否是非依赖函数类型（伪箭头）"""
         return self.is_forallE() and self.kind.body.is_bvar() and self.kind.body.kind.idx == 0
-    
+
     def get_app_fn(self) -> Expr:
         """获取应用链的函数头"""
         e = self
         while e.is_app():
             e = e.kind.fn
         return e
-    
+
     def get_app_args(self) -> List[Expr]:
         """获取应用链的所有参数"""
         args = []
@@ -289,15 +289,15 @@ class Expr:
             args.append(e.kind.arg)
             e = e.kind.fn
         return list(reversed(args))
-    
+
     def __repr__(self) -> str:
         """简洁表示"""
         return self._repr_impl(0)
-    
+
     def _repr_impl(self, depth: int) -> str:
         if depth > 10:
             return "..."
-        
+
         match self.kind:
             case Expr.BVar(idx):
                 return f"#{idx}"
@@ -340,15 +340,15 @@ class Expr:
                 return f"{struct._repr_impl(depth+1)}.{idx}"
             case _:
                 return f"Expr({self.kind})"
-    
+
     def __str__(self) -> str:
         return self.__repr__()
-    
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, Expr):
             return False
         return self.kind == other.kind
-    
+
     def __hash__(self) -> int:
         return hash(str(self.kind))
 

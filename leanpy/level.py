@@ -13,49 +13,49 @@ from typing import List, Optional, Set, Union
 class Level:
     """
     宇宙层级表达式。
-    
+
     Level 的语法：
       ℓ ::= 0                     -- 零层级（对应 Prop/Sort 0）
           | u                     -- 层级变量
           | ℓ + n                 -- 后继层级（n 是自然数）
           | max(ℓ₁, ℓ₂)           -- 最大层级
           | imax(ℓ₁, ℓ₂)          -- 有条件的最大层级
-    
+
     其中 imax(u, v) = 0 如果 v = 0，否则 = max(u, v)
     这保证了如果 codomain 在 Prop 中，则整个 Π-type 也在 Prop 中。
     """
-    
+
     @dataclass(frozen=True)
     class Zero:
         """零层级"""
         def __repr__(self): return "0"
-    
+
     @dataclass(frozen=True)
     class Succ:
         """后继层级 ℓ + 1"""
         level: 'Level'
         def __repr__(self): return f"({self.level} + 1)"
-    
+
     @dataclass(frozen=True)
     class Max:
         """最大层级 max(ℓ₁, ℓ₂)"""
         lhs: 'Level'
         rhs: 'Level'
         def __repr__(self): return f"max({self.lhs}, {self.rhs})"
-    
+
     @dataclass(frozen=True)
     class IMax:
         """有条件的最大层级 imax(ℓ₁, ℓ₂)"""
         lhs: 'Level'
         rhs: 'Level'
         def __repr__(self): return f"imax({self.lhs}, {self.rhs})"
-    
+
     @dataclass(frozen=True)
     class Param:
         """层级变量（universe parameter）"""
         name: str
         def __repr__(self): return self.name
-    
+
     @dataclass(frozen=True)
     class MSSucc:
         """多元后继：level + n"""
@@ -68,28 +68,28 @@ class Level:
 
     # 单例：零层级
     ZERO = Zero()
-    
+
     # Union type for matching
     kind: Union[Zero, Succ, Max, IMax, Param, MSSucc]
-    
+
     def __init__(self, kind=None):
         if kind is None:
             object.__setattr__(self, 'kind', Level.ZERO)
         else:
             object.__setattr__(self, 'kind', kind)
-    
+
     @staticmethod
     def zero() -> Level:
         """创建零层级"""
         return Level(Level.ZERO)
-    
+
     @staticmethod
     def succ(l: Level) -> Level:
         """创建后继层级"""
         if isinstance(l.kind, Level.MSSucc):
             return Level(Level.MSSucc(l.kind.level, l.kind.offset + 1))
         return Level(Level.Succ(l))
-    
+
     @staticmethod
     def max_level(l1: Level, l2: Level) -> Level:
         """创建最大层级"""
@@ -101,7 +101,7 @@ class Level:
         if l1 == l2:
             return l1
         return Level(Level.Max(l1, l2))
-    
+
     @staticmethod
     def imax_level(l1: Level, l2: Level) -> Level:
         """创建有条件的最大层级"""
@@ -110,34 +110,34 @@ class Level:
             return Level.zero()
         # imax(u, v) = max(u, v) when v ≠ 0
         return Level.max_level(l1, l2)
-    
+
     @staticmethod
     def param(name: str) -> Level:
         """创建层级变量"""
         return Level(Level.Param(name))
-    
+
     def __repr__(self) -> str:
         return repr(self.kind)
-    
+
     def __str__(self) -> str:
         return repr(self)
-    
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, Level):
             return False
         return self.kind == other.kind
-    
+
     def __hash__(self) -> int:
         return hash(repr(self.kind))
-    
+
     def is_zero(self) -> bool:
         """检查是否为零层级"""
         return isinstance(self.kind, Level.Zero)
-    
+
     def is_param(self) -> bool:
         """检查是否是变量"""
         return isinstance(self.kind, Level.Param)
-    
+
     def get_param_names(self) -> Set[str]:
         """获取所有层级变量名"""
         match self.kind:
@@ -151,7 +151,7 @@ class Level:
                 return level.get_param_names()
             case _:
                 return set()
-    
+
     def subst(self, subst_map: dict) -> Level:
         """替换层级变量"""
         match self.kind:
