@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Optional, List, Tuple
 
 from .expr import Expr
+from .level import Level
 from .environment import (
     Environment, MetavarContext, LocalContext,
     DefnVal, ThmVal, RecVal, CtorVal

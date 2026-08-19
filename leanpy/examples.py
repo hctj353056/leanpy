@@ -70,7 +70,7 @@ def setup_basic_environment() -> Environment:
 
 def setup_nat_environment() -> Environment:
     """设置包含自然数定义和加法的环境。"""
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 定义加法：add : Nat → Nat → Nat
     # 简化版：作为公理声明
@@ -102,8 +102,7 @@ def example_id_function():
     """
     print("\n--- 示例 1a: 恒等函数 (A → A) ---")
 
-    _ = setup_basic_environment()
-    _ = env
+    env = setup_basic_environment()
     checker = TypeChecker(env)
     ctx = LocalContext()
 
@@ -136,7 +135,7 @@ def example_k_combinator():
     """
     print("\n--- 示例 1b: K 组合子 (A → B → A) ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 构造 λ A : Type. λ B : Type. λ a : A. λ b : B. a
     k_term = parse_expr("fun (A : Type) (B : Type) (a : A) (b : B) => a")
@@ -158,7 +157,7 @@ def example_s_combinator():
     """
     print("\n--- 示例 1c: S 组合子 ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 构造 S 组合子
     # fun (A B C : Type) (f : A -> B -> C) (g : A -> B) (x : A) => f x (g x)
@@ -185,7 +184,7 @@ def example_and_intro():
     """
     print("\n--- 示例 2a: 合取引入 (A → B → A ∧ B) ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 合取引入：λ A B. λ a b. Prod.mk a b
     and_intro = parse_expr(
@@ -210,7 +209,7 @@ def example_and_elim_left():
 
     # 在纯 λ 演算中，可以用 fst = λ p. p (λ a b. a)
     # 这里展示概念
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # fst : Prod A B → A
     fst_term = parse_expr(
@@ -232,7 +231,7 @@ def example_or_intro_left():
     """
     print("\n--- 示例 2c: 析取引入左 (A → A ∨ B) ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     or_intro_left = parse_expr(
         "fun (A : Type) (B : Type) (a : A) => Sum.inl A B a"
@@ -253,7 +252,7 @@ def example_implies_trans():
     """
     print("\n--- 示例 2d: 蕴涵传递性 ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # λ A B C. λ f g x. g (f x)
     trans_term = parse_expr(
@@ -276,7 +275,7 @@ def example_dneg_intro():
     """
     print("\n--- 示例 2e: 双重否定引入 (A → ¬¬A) ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # ¬¬A = (A → Empty) → Empty
     # A → ¬¬A = λ a k. k a
@@ -426,7 +425,7 @@ def example_tactic_intro_exact():
     """
     print("\n--- 示例 5a: Tactic 证明 A → A ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 目标：A → A
     # 使用 Nat 作为具体的 A
@@ -468,7 +467,7 @@ def example_tactic_assumption():
     """
     print("\n--- 示例 5b: Tactic 证明 A → A (使用 assumption) ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 目标：A → A
     nat = Expr.const(mk_name("Nat"))
@@ -508,7 +507,7 @@ def example_tactic_apply():
     """
     print("\n--- 示例 5c: Tactic 使用 apply ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 证明 Nat → Nat
     # 使用 apply (λ x. x)
@@ -540,7 +539,7 @@ def example_tactic_combined():
     """使用组合 tactic 证明更复杂的命题。"""
     print("\n--- 示例 5d: 组合 Tactic 证明 ---")
 
-    _ = setup_basic_environment()
+    env = setup_basic_environment()
 
     # 证明 A → B → A
     # (K 组合子)

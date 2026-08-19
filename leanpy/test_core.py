@@ -10,7 +10,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from leanpy.expr import Expr
-from leanpy.environment import Environment
+from leanpy.name import mk_name
+from leanpy.level import Level
+from leanpy.environment import Environment, DefnVal, AxiomVal, LocalContext
 from leanpy.reducer import Reducer
 from leanpy.typechecker import TypeChecker
 
